@@ -380,10 +380,21 @@ async function ensureAudio() {
   }
   if (ctx.state === "suspended") await ctx.resume();
 }
+// iPhone: while a page holds the mic, Safari stays in "call" mode and won't play through
+// Bluetooth speakers. Ask for plain playback whenever the mic is off (Safari 16.4+).
+function setAudioSession(type) { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch {} }
+function releaseAudio() {
+  if (recorder) recorder.stop();
+  if (ctx) ctx.close().catch(() => {});
+  ctx = null; chain = null; wave = null;
+  $("btnRec").disabled = true;
+}
 function stopSource() {
+  const wasMic = source && source.kind === "mic";
   if (source) { source.stop(); source = null; }
   $("btnMic").classList.remove("on");
   $("btnStop").disabled = true;
+  if (wasMic) { releaseAudio(); setAudioSession("playback"); }
 }
 function playBuffer(buf, label) {
   stopSource();
@@ -398,8 +409,9 @@ function playBuffer(buf, label) {
 
 $("btnMic").onclick = async () => {
   try {
-    await ensureAudio();
     if (source && source.kind === "mic") { stopSource(); status("Microfone desligado."); return; }
+    setAudioSession("play-and-record");
+    await ensureAudio();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     stopSource();
     const node = ctx.createMediaStreamSource(stream);
@@ -408,10 +420,12 @@ $("btnMic").onclick = async () => {
     $("btnMic").classList.add("on"); $("btnStop").disabled = false;
     status("Microfone ligado. Fale! Use fones para não dar microfonia.");
   } catch (e) {
+    setAudioSession("playback");
     status("O microfone foi bloqueado aqui. Nesta visualização use “Carregar áudio” ou a voz de teste; para usar o microfone, abra o arquivo index.html direto no Chrome, Edge ou Firefox e permita o acesso.", true);
   }
 };
 $("btnDemo").onclick = async () => {
+  if (!(source && source.kind === "mic")) setAudioSession("playback");
   await ensureAudio();
   if (!demoBuffer) demoBuffer = await makeDemo(ctx.sampleRate);
   playBuffer(demoBuffer, "a voz de teste");
@@ -419,6 +433,7 @@ $("btnDemo").onclick = async () => {
 $("fileIn").onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
+    if (!(source && source.kind === "mic")) setAudioSession("playback");
     await ensureAudio();
     fileBuffer = await ctx.decodeAudioData(await f.arrayBuffer());
     fileName = f.name;
@@ -462,6 +477,7 @@ function addTake(blob, name) {
     const row = document.createElement("div"); row.className = "take";
     const label = document.createElement("span"); label.textContent = t.name;
     const audio = document.createElement("audio"); audio.controls = true; audio.src = t.url;
+    audio.onplay = () => { if (source && source.kind === "mic") { stopSource(); status("Microfone desligado para tocar a gravação."); } };
     const dl = document.createElement("button"); dl.type = "button"; dl.textContent = "Baixar";
     dl.onclick = () => saveFile(t.blob, t.name);
     row.append(label, audio, dl); box.append(row);
