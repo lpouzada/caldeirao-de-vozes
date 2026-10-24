@@ -1,6 +1,6 @@
 # Caldeirão de Vozes
 
-Modificador de voz no navegador: Bruxa, Fantasma, Darth Vader, Robô, Alienígena, Monstro, Demônio, Esquilo, Zumbi, Rádio antigo, Caverna — e as vozes que você criar.
+Modificador de voz no navegador: Bruxa, Fantasma, Darth Vader, Robô, Alienígena, Monstro, Demônio, Esquilo, Zumbi, Rádio antigo, Caverna, Narrador de trailer, Locutor FM, Estádio, Megafone, Mago, Gigante, Duende — e as vozes que você criar.
 
 ## Como usar
 

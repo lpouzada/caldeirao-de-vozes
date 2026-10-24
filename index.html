@@ -206,6 +206,13 @@ const BUILT_IN = [
   { id: "zumbi",    name: "Zumbi",       hue: 75,  desc: "Arrastada e gemida",             p: { pitch: -3, vibRate: 2, vibDepth: 1.3, drive: 30, lp: 2200, reverb: 0.2 } },
   { id: "radio",    name: "Rádio antigo", hue: 35, desc: "Chiado de válvula, anos 40",     p: { hp: 550, lp: 3000, drive: 55 } },
   { id: "caverna",  name: "Caverna",     hue: 230, desc: "Eco que não acaba",              p: { echo: 0.5, echoTime: 0.45, reverb: 0.6 } },
+  { id: "trailer",  name: "Narrador de trailer", hue: 15, desc: "“Num mundo onde…”",       p: { pitch: -3, drive: 8, hp: 60, lp: 12000, echo: 0.1, echoTime: 0.3, reverb: 0.3 } },
+  { id: "fm",       name: "Locutor FM",  hue: 300, desc: "Grave, encorpado, de estúdio",  p: { pitch: -1.5, drive: 12, hp: 90, lp: 14000, reverb: 0.05 } },
+  { id: "estadio",  name: "Estádio",     hue: 140, desc: "Anúncio no alto-falante",       p: { drive: 15, hp: 220, lp: 7000, echo: 0.35, echoTime: 0.28, reverb: 0.5 } },
+  { id: "megafone", name: "Megafone",    hue: 55,  desc: "Estridente e rasgado",          p: { hp: 800, lp: 3500, drive: 70, reverb: 0.1 } },
+  { id: "mago",     name: "Mago",        hue: 260, desc: "Ancião sábio numa torre",       p: { pitch: -2, vibRate: 4, vibDepth: 0.25, echo: 0.2, echoTime: 0.3, reverb: 0.55 } },
+  { id: "gigante",  name: "Gigante",     hue: 30,  desc: "Lento, enorme, ecoando",        p: { pitch: -11, lp: 3000, echo: 0.15, echoTime: 0.25, reverb: 0.5 } },
+  { id: "duende",   name: "Duende",      hue: 160, desc: "Pequeno e travesso",            p: { pitch: 7, vibRate: 5, vibDepth: 0.3, hp: 300 } },
   { id: "natural",  name: "Natural",     hue: 275, desc: "Sua voz, sem efeito",            p: {} },
 ].map(v => ({ ...v, p: { ...NEUTRAL, ...v.p } }));
 
