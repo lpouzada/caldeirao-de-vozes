@@ -378,7 +378,7 @@ async function ensureAudio() {
     chain.monitor.gain.value = $("monitor").checked ? 1 : 0;
     $("btnRec").disabled = false;
   }
-  if (ctx.state === "suspended") await ctx.resume();
+  if (ctx.state !== "running") await ctx.resume().catch(() => {}); // iOS can leave a new context "interrupted"
 }
 // iPhone: while a page holds the mic, Safari stays in "call" mode and won't play through
 // Bluetooth speakers. Ask for plain playback whenever the mic is off (Safari 16.4+).
@@ -410,7 +410,7 @@ function playBuffer(buf, label) {
 $("btnMic").onclick = async () => {
   try {
     if (source && source.kind === "mic") { stopSource(); status("Microfone desligado."); return; }
-    setAudioSession("play-and-record");
+    setAudioSession("auto"); // let Safari pick its own capture mode, as before
     await ensureAudio();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     stopSource();
@@ -421,7 +421,8 @@ $("btnMic").onclick = async () => {
     status("Microfone ligado. Fale! Use fones para não dar microfonia.");
   } catch (e) {
     setAudioSession("playback");
-    status("O microfone foi bloqueado aqui. Nesta visualização use “Carregar áudio” ou a voz de teste; para usar o microfone, abra o arquivo index.html direto no Chrome, Edge ou Firefox e permita o acesso.", true);
+    if (e && e.name === "NotAllowedError") status("O microfone foi bloqueado. Permita o acesso ao microfone para este site nos ajustes do navegador, ou use “Carregar áudio” e a voz de teste.", true);
+    else status("Não consegui ligar o microfone (" + (e && (e.name + ": " + e.message)) + "). Feche a aba e abra o site de novo.", true);
   }
 };
 $("btnDemo").onclick = async () => {
@@ -456,7 +457,8 @@ $("btnRec").onclick = () => {
   const mimeType = types.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
   if (!mimeType) { status("Este navegador não grava áudio. Tente o Chrome ou o Firefox.", true); return; }
   const chunks = [], voice = selected.name;
-  recorder = new MediaRecorder(chain.recDest.stream, { mimeType });
+  try { recorder = new MediaRecorder(chain.recDest.stream, { mimeType }); }
+  catch (e) { recorder = null; status("Não consegui começar a gravar (" + e.name + ": " + e.message + "). Feche a aba e abra o site de novo.", true); return; }
   recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
   recorder.onstop = () => {
     clearInterval(recTimer); recorder = null;
@@ -466,7 +468,9 @@ $("btnRec").onclick = () => {
     const slug = voice.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
     addTake(blob, `voz-${slug}-${++takeCount}.${ext}`);
   };
-  recorder.start(); recStart = Date.now();
+  try { recorder.start(); }
+  catch (e) { recorder = null; status("Não consegui começar a gravar (" + e.name + ": " + e.message + "). Feche a aba e abra o site de novo.", true); return; }
+  recStart = Date.now();
   $("btnRec").classList.add("on"); $("btnRec").lastChild.textContent = " Parar gravação";
   recTimer = setInterval(() => { const s = Math.floor((Date.now() - recStart) / 1000); $("recTime").textContent = `● ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }, 250);
 };
